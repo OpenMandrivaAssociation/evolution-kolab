@@ -5,7 +5,7 @@
 
 Summary:	Kolab groupware Connector for Evolution
 Name:		evolution-kolab
-Version:	3.4.3
+Version:	3.4.4
 Release:	1
 License:	GPLv2+
 Group:		Networking/Mail
