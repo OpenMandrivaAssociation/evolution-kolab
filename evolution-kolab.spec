@@ -1,48 +1,85 @@
-%define	evolution_base_version	3.4
-%define	major	0
-%define	libname	%mklibname ekolabconv %{major}
-%define	devname	%mklibname ekolabconv -d
+%define url_ver	%(echo %{version}|cut -d. -f1,2)
 
-Summary:	Kolab groupware Connector for Evolution
 Name:		evolution-kolab
-Version:	3.4.4
-Release:	1
-License:	GPLv2+
+Summary:	Kolab support for Evolution
+Version:	3.6.2
+Release:	%mkrel 1
+License:	LGPLv2+
 Group:		Networking/Mail
-Url:		http://evolution-kolab.sourceforge.net/
-Source0:	ftp://ftp.gnome.org/pub/GNOME/sources/%{name}/%{name}-%{version}.tar.xz
-BuildRequires:	gperf
-BuildRequires:	intltool
-BuildRequires:	pkgconfig(evolution-data-server-1.2)
+Source0:	http://download.gnome.org/sources/%{name}/%{url_ver}/%{name}-%{version}.tar.xz
+URL:		https://live.gnome.org/Evolution/Kolab
+BuildRequires:	pkgconfig(camel-1.2)
 BuildRequires:	pkgconfig(evolution-plugin-3.0)
-BuildRequires:	pkgconfig(gconf-2.0)
-BuildRequires:	pkgconfig(glib-2.0)
-BuildRequires:	pkgconfig(gmime-2.4)
-BuildRequires:	pkgconfig(gtk+-3.0)
+BuildRequires:	pkgconfig(gconf-2.0) >= 2.0.0
+BuildRequires:	pkgconfig(glib-2.0) >= 2.16.1
+BuildRequires:	pkgconfig(gmime-2.6)
+BuildRequires:	pkgconfig(gobject-2.0)
+BuildRequires:	pkgconfig(gtk+-3.0) >= 2.99.2
+BuildRequires:	pkgconfig(libcurl)
+BuildRequires:	pkgconfig(libebackend-1.2)
+BuildRequires:	pkgconfig(libebook-1.2)
+BuildRequires:	pkgconfig(libecal-1.2)
 BuildRequires:	pkgconfig(libedata-book-1.2)
 BuildRequires:	pkgconfig(libedata-cal-1.2)
+BuildRequires:	pkgconfig(libedataserver-1.2)
 BuildRequires:	pkgconfig(libedataserverui-3.0)
-BuildRequires:	pkgconfig(libcurl)
 BuildRequires:	pkgconfig(libical)
+BuildRequires:	pkgconfig(libsoup-2.4)
+BuildRequires:	pkgconfig(libsoup-gnome-2.4)
+BuildRequires:	pkgconfig(sqlite3)
+BuildRequires:	gtk-doc
+BuildRequires:	evolution-devel
+BuildRequires:	pkgconfig(libebook-1.2)
+BuildRequires:	pkgconfig(libecal-1.2)
+BuildRequires:	pkgconfig(gnome-desktop-3.0)
+BuildRequires:	intltool >= 0.35.5
+BuildRequires:	gettext-devel
+BuildRequires:	gperf
+BuildRequires:	gnome-common
+Requires:	evolution
 
 %description
-A project to provide connectivity to Kolab groupware servers for
-Evolution
+Provide connectivity to Kolab groupware servers for Evolution.
 
-%package  -n %{libname}
-Summary:	Client library for Accessing Kolab groupware Servers
+%files -f evolution_kolab.lang
+%doc NEWS
+%{_bindir}/*
+%{_libdir}/evolution-data-server/*/*
+%{_libdir}/evolution/*/plugins/*
+%{_libdir}/evolution/*/modules/*.so
+
+#----------------------------------------------------------------------
+
+%define major	0
+%define libname %mklibname ekolabconv %{major}
+
+%package -n %{libname}
 Group:		System/Libraries
+Summary:	Shared library for %{name}
 
 %description -n %{libname}
-This package contains the libraries for %{name}.
+Library for %{name}.
 
-%package -n %{devname}
-Summary:	Development Files for %{name}
+%files -n %{libname}
+%{_libdir}/libekolabconv.so.%{major}
+%{_libdir}/libekolabconv.so.%{major}.*
+
+#----------------------------------------------------------------------
+
+%package devel
 Group:		Development/C
+Summary:	Headers for writing %{name} plugins
+Requires:	%{name} = %{version}
 Requires:	%{libname} = %{version}
 
-%description -n %{devname}
-This package contains  the development files for %{name}.
+%description devel
+Install this if you want to build plugins that use %{name}'s API.
+
+%files devel
+%{_libdir}/libekolabconv.so
+%{_datadir}/gtk-doc/html/*
+
+#----------------------------------------------------------------------
 
 %prep
 %setup -q
@@ -50,39 +87,13 @@ This package contains  the development files for %{name}.
 %build
 %configure2_5x \
 	--disable-static
-
-%make LIBS='-lm'
+make
 
 %install
 %makeinstall_std
 
-find %{buildroot}%{_libdir} -name '*.la' -delete -print
+find %{buildroot} -name *.la | xargs rm
+
 rm -fr %{buildroot}%{_prefix}/doc
 
 %find_lang evolution_kolab
-
-%files -f evolution_kolab.lang
-%doc COPYING
-%{_bindir}/camel-kolab-imapx-provider
-%{_bindir}/evolution_kolab
-%{_bindir}/tdriver
-%{_libdir}/evolution-data-server/addressbook-backends/libebookbackendkolab.so
-%{_libdir}/evolution-data-server/calendar-backends/libecalbackendkolab.so
-%{_libdir}/evolution-data-server/camel-providers/libcamelkolab.so
-%{_libdir}/evolution-data-server/camel-providers/libcamelkolab.urls
-%{_libdir}/evolution/%{evolution_base_version}/plugins/liborg-gnome-kolab.so
-%{_libdir}/evolution/%{evolution_base_version}/plugins/org-gnome-kolab.eplug
-
-%files -n %{libname}
-%{_libdir}/libekolabconv.so.%{major}*
-#these are odd, should the have a versioned soname or are the modules
-%{_libdir}/libekolab.so
-%{_libdir}/libekolabbackend.so
-%{_libdir}/libekolabutil.so
-
-%files -n %{devname}
-%{_bindir}/test-kolab-*
-%{_bindir}/unittest-libekolabconv
-%{_libdir}/libekolabconv.so
-%{_datadir}/gtk-doc/*
-%{_datadir}/%{name}
